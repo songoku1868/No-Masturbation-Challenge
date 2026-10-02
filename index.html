@@ -1,0 +1,305 @@
+<!doctype html>
+<html lang="hi">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
+<meta name="theme-color" content="#111827">
+<title>Daily Challenge Tracker</title>
+<style>
+*{box-sizing:border-box}body{margin:0;font-family:system-ui,-apple-system,Segoe UI,Roboto,sans-serif;background:#f3f4f6;color:#111827}
+.app{max-width:520px;margin:auto;min-height:100vh;background:#f8fafc}.top{background:#111827;color:white;padding:22px 18px 20px;border-radius:0 0 24px 24px}
+.top h1{font-size:22px;margin:0 0 5px}.muted{opacity:.7;font-size:13px}.wrap{padding:16px 15px 90px}
+.card{background:white;border:1px solid #e5e7eb;border-radius:18px;padding:16px;margin-bottom:14px;box-shadow:0 4px 14px rgba(15,23,42,.05)}
+.btn{width:100%;border:0;border-radius:14px;padding:14px 16px;font-size:16px;font-weight:700;cursor:pointer;margin-top:9px}.primary{background:#111827;color:white}.green{background:#16a34a;color:white}.soft{background:#eef2ff;color:#3730a3}.danger{background:#fee2e2;color:#991b1b}.input{width:100%;padding:14px;border:1px solid #d1d5db;border-radius:12px;font-size:16px;margin:7px 0 10px;background:white}
+.hidden{display:none!important}.center{text-align:center}.hero{font-size:46px;font-weight:800;line-height:1;margin:10px 0}.streak{background:linear-gradient(135deg,#fff7ed,#ffedd5);border:1px solid #fed7aa}.stats{display:grid;grid-template-columns:repeat(2,1fr);gap:10px}.stat{background:#f8fafc;border-radius:14px;padding:13px}.stat b{display:block;font-size:22px}.stat span{font-size:12px;color:#6b7280}
+.row{display:flex;align-items:center;justify-content:space-between;gap:10px}.member{padding:12px 0;border-bottom:1px solid #eee}.member:last-child{border-bottom:0}.avatar{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:#e5e7eb;font-weight:800}.memberinfo{display:flex;align-items:center;gap:10px;flex:1}.pill{font-size:12px;padding:5px 9px;border-radius:999px;background:#dcfce7;color:#166534;font-weight:700}.calendar{display:grid;grid-template-columns:repeat(7,1fr);gap:5px}.calhead{font-size:11px;text-align:center;color:#6b7280;padding-bottom:4px}.day{aspect-ratio:1;border-radius:10px;background:#f1f5f9;display:grid;place-items:center;font-size:12px;font-weight:700}.day.done{background:#dcfce7;color:#166534}.day.today{outline:2px solid #111827}.day.future{opacity:.45}.nav{position:fixed;bottom:0;left:50%;transform:translateX(-50%);width:min(520px,100%);background:white;border-top:1px solid #e5e7eb;display:grid;grid-template-columns:repeat(4,1fr);padding:7px 4px calc(7px + env(safe-area-inset-bottom));z-index:10}.nav button{border:0;background:none;padding:7px 2px;font-size:11px;color:#6b7280}.nav button.active{color:#111827;font-weight:800}.code{font-size:28px;letter-spacing:5px;font-weight:900;text-align:center;background:#f3f4f6;border-radius:12px;padding:13px;margin:10px 0}.small{font-size:12px;color:#6b7280}.notice{padding:11px;border-radius:12px;background:#fef3c7;color:#92400e;font-size:12px;margin-bottom:12px}
+</style>
+</head>
+<body>
+<div class="app">
+  <div id="top" class="top"><h1>🔥 Daily Challenge</h1><div class="muted">Track your streak together</div></div>
+  <main class="wrap">
+    <section id="welcome" class="screen">
+      <div class="card center" style="margin-top:22px;padding:28px 18px">
+        <div style="font-size:58px">🔥</div><h2>Daily Challenge Tracker</h2>
+        <p class="small">Create a private challenge, invite friends and mark your daily progress.</p>
+        <button class="btn primary" onclick="showCreate()">Create Challenge</button>
+        <button class="btn soft" onclick="showJoin()">Join Challenge</button>
+      </div>
+    </section>
+
+    <section id="create" class="screen hidden">
+      <div class="card"><h2>Create Challenge</h2>
+        <label class="small">Challenge name</label><input id="cname" class="input" value="My Daily Challenge">
+        <label class="small">Duration</label><select id="duration" class="input"><option value="7">7 Days</option><option value="14">14 Days</option><option value="30" selected>30 Days</option><option value="0">No fixed end</option></select>
+        <label class="small">Your name</label><input id="owner" class="input" placeholder="Enter your name">
+        <button class="btn primary" onclick="createChallenge()">Create & Continue</button>
+        <button class="btn soft" onclick="backWelcome()">Back</button>
+      </div>
+    </section>
+
+    <section id="join" class="screen hidden">
+      <div class="card"><h2>Join Challenge</h2><label class="small">Invite code</label><input id="jcode" class="input" placeholder="Example: A7K2P9">
+      <label class="small">Your name</label><input id="jname" class="input" placeholder="Enter your name">
+      <button class="btn primary" onclick="joinChallenge()">Join</button>
+      <button class="btn soft" onclick="backWelcome()">Back</button></div>
+    </section>
+
+    <section id="invite" class="screen hidden">
+      <div class="card center"><h2>🎉 Challenge Ready</h2><p class="small">Share this code with your friend.</p><div id="code" class="code"></div>
+      <button class="btn green" onclick="shareInvite()">🟢 Share on WhatsApp</button>
+      <button class="btn soft" onclick="copyInvite()">📋 Copy Invite Text</button>
+      <button class="btn primary" onclick="goHome()">Open Dashboard</button></div>
+      <div class="notice">Prototype mode: data is stored on this device. For live multi-phone syncing, connect a Firebase/Supabase database.</div>
+    </section>
+
+    <section id="home" class="screen hidden">
+      <div class="card"><div class="row"><div><div class="small" id="challengeName"></div><h2 id="dayTitle" style="margin:4px 0"></h2></div><span id="durationPill" class="pill"></span></div></div>
+      <div class="card streak center"><div class="small">YOUR CURRENT STREAK</div><div class="hero" id="myStreak">0</div><div class="small">🔥 Keep going</div>
+        <h2 style="margin:18px 0 8px">What's the day?</h2>
+        <div class="small" id="todayStatus">Choose your status for today</div>
+        <div id="dayChoices">
+          <button id="strongBtn" class="btn green" onclick="markToday('Strong')">💪 Strong</button>
+          <button id="weakBtn" class="btn soft" onclick="markToday('Weak')">🙂 Weak</button>
+        </div>
+      </div>
+      <div class="stats">
+        <div class="stat"><b id="totalDone">0</b><span>Total Marked</span></div>
+        <div class="stat"><b id="longest">0</b><span>Longest Streak</span></div>
+        <div class="stat"><b id="missed">0</b><span>Missed Days</span></div>
+        <div class="stat"><b id="rate">0%</b><span>Completion</span></div>
+      </div>
+      <div class="card"><h3>👥 Group Progress</h3><div id="members"></div></div>
+      <div class="card"><h3>📈 Visual Progress</h3>
+        <div class="small" style="margin-bottom:10px">Strong vs Weak vs Not Marked</div>
+        <div id="graph"></div>
+      </div>
+      <div class="card"><h3>🔗 Invite</h3><div class="small">Code: <b id="miniCode"></b></div><button class="btn soft" onclick="shareInvite()">Share on WhatsApp</button></div>
+    </section>
+
+    <section id="calendar" class="screen hidden"><div class="card"><h2>📅 Calendar</h2><div class="small" id="calMonth"></div><div style="height:10px"></div><div class="calendar" id="cal"></div></div></section>
+
+    <section id="stats" class="screen hidden"><div class="card"><h2>📊 Statistics</h2><div class="stats">
+      <div class="stat"><b id="s1">0</b><span>Current Streak</span></div><div class="stat"><b id="s2">0</b><span>Longest Streak</span></div><div class="stat"><b id="s3">0</b><span>Total Marked</span></div><div class="stat"><b id="s4">0%</b><span>Completion Rate</span></div>
+    </div></div><div class="card"><h3>Challenge Details</h3><div id="details" class="small"></div></div></section>
+
+    <section id="settings" class="screen hidden"><div class="card"><h2>⚙️ Settings</h2>
+      <button class="btn soft" onclick="changeName()">Change My Name</button>
+      <button class="btn soft" onclick="shareInvite()">Share Invite</button>
+      <div class="card" style="margin:14px 0 0;background:#f8fafc">
+        <h3 style="margin-top:0">🔔 Daily Reminder</h3>
+        <div class="small">Choose the time when you want your daily challenge reminder.</div>
+        <input id="reminderTime" type="time" class="input" style="margin-top:10px">
+        <button class="btn primary" onclick="saveReminder()">Save Reminder Time</button>
+        <button id="notifBtn" class="btn soft" onclick="enableNotifications()">Allow Notifications</button>
+        <div id="notifStatus" class="small" style="margin-top:8px"></div>
+      </div>
+      <button class="btn danger" onclick="resetAll()">Reset This Demo</button>
+      <p class="small" style="margin-top:15px">Real multi-device sync requires an online database. This standalone version is a functional prototype.</p>
+    </div></section>
+  </main>
+  <nav id="nav" class="nav hidden">
+    <button onclick="tab('home')" id="n-home">🏠<br>Home</button>
+    <button onclick="tab('calendar')" id="n-calendar">📅<br>Calendar</button>
+    <button onclick="tab('stats')" id="n-stats">📊<br>Stats</button>
+    <button onclick="tab('settings')" id="n-settings">⚙️<br>Settings</button>
+  </nav>
+</div>
+<script>
+const KEY='dailyChallengeDemoV1';
+let db=JSON.parse(localStorage.getItem(KEY)||'null');
+const $=id=>document.getElementById(id);
+function save(){localStorage.setItem(KEY,JSON.stringify(db))}
+function today(){let d=new Date();return new Date(d.getFullYear(),d.getMonth(),d.getDate())}
+function key(d){return d.toISOString().slice(0,10)}
+function isoToday(){return key(today())}
+function show(id){document.querySelectorAll('.screen').forEach(x=>x.classList.add('hidden'));$(id).classList.remove('hidden')}
+function showCreate(){show('create')}
+function showJoin(){show('join')}
+function backWelcome(){show('welcome')}
+function genCode(){return Math.random().toString(36).slice(2,8).toUpperCase()}
+function createChallenge(){
+ let name=$('owner').value.trim();if(!name)return alert('अपना नाम डालें।');
+ db={challenge:{name:$('cname').value.trim()||'Daily Challenge',start:isoToday(),duration:+$('duration').value,code:genCode()},me:'m1',members:[{id:'m1',name,marks:[]}]};
+ save();$('code').textContent=db.challenge.code;show('invite');
+}
+function joinChallenge(){
+ let code=$('jcode').value.trim().toUpperCase(), name=$('jname').value.trim();if(!name)return alert('अपना नाम डालें।');
+ if(!db||!db.challenge||db.challenge.code!==code)return alert('इस demo में पहले उसी device पर बनाया गया challenge code डालें। Live sharing के लिए database connection चाहिए।');
+ db.members.push({id:'m'+Date.now(),name,marks:[]});db.me=db.members.at(-1).id;save();goHome();
+}
+function me(){return db.members.find(x=>x.id===db.me)}
+function datesBetween(a,b){let arr=[];for(let d=new Date(a);d<=b;d.setDate(d.getDate()+1))arr.push(new Date(d));return arr}
+function normalizeMarks(m){
+ return m.marks.map(x=>typeof x==='string'?{date:x,status:'Strong'}:x);
+}
+function stats(m){
+ let marks=normalizeMarks(m), done=new Set(marks.map(x=>x.date)), cur=0, longest=0, run=0, d=today();
+ while(done.has(key(d))){cur++;d.setDate(d.getDate()-1)}
+ let start=new Date(db.challenge.start);let end=today();
+ for(let x of datesBetween(start,end)){if(done.has(key(x))){run++;longest=Math.max(longest,run)}else run=0}
+ let strong=marks.filter(x=>x.status==='Strong').length, weak=marks.filter(x=>x.status==='Weak').length;
+ let total=marks.length, totalDays=Math.max(1,Math.floor((today()-start)/86400000)+1);
+ return {cur,longest,total,strong,weak,missed:Math.max(0,totalDays-total)};
+}
+function challengeDay(){return Math.max(1,Math.floor((today()-new Date(db.challenge.start))/86400000)+1)}
+function goHome(){if(!db)return backWelcome();show('home');$('nav').classList.remove('hidden');tab('home');render()}
+function tab(id){show(id);document.querySelectorAll('.nav button').forEach(x=>x.classList.remove('active'));$('n-'+id).classList.add('active');render()}
+function markToday(status){
+ let m=me(), t=isoToday();
+ if(m.marks.some(x=>x.date===t || x===t))return;
+ m.marks.push({date:t,status});
+ save();render();
+}
+function render(){
+ if(!db)return;
+ let m=me(),s=stats(m),day=challengeDay();
+ $('challengeName').textContent=db.challenge.name;$('dayTitle').textContent='Day '+day+(db.challenge.duration?' / '+db.challenge.duration:'');$('durationPill').textContent=db.challenge.duration?db.challenge.duration+' Days':'Open';
+ $('myStreak').textContent=s.cur;$('totalDone').textContent=s.total;$('longest').textContent=s.longest;
+ let totalDays=db.challenge.duration?Math.min(day,db.challenge.duration):day;let missed=s.missed;$('missed').textContent=missed;$('rate').textContent=(totalDays?Math.round(s.total/totalDays*100):0)+'%';
+ let todayMark=normalizeMarks(m).find(x=>x.date===isoToday());
+$('strongBtn').disabled=!!todayMark;$('weakBtn').disabled=!!todayMark;
+$('strongBtn').style.opacity=todayMark?.status==='Strong'?.55:1;
+$('weakBtn').style.opacity=todayMark?.status==='Weak'?.55:1;
+$('todayStatus').innerHTML=todayMark?`Today marked: <b>${todayMark.status}</b> ✅`:'Choose your status for today';
+ $('miniCode').textContent=db.challenge.code;
+ $('members').innerHTML=db.members.map(x=>{let z=stats(x);return `<div class="member row"><div class="memberinfo"><div class="avatar">${x.name[0].toUpperCase()}</div><div><b>${escapeHtml(x.name)}${x.id===db.me?' (You)':''}</b><div class="small">🔥 ${z.cur} streak · 💪 ${z.strong} strong · 🙂 ${z.weak} weak</div></div></div><span class="pill">${z.total} marked</span></div>`}).join('');
+ $('s1').textContent=s.cur;$('s2').textContent=s.longest;$('s3').textContent=s.total;$('s4').textContent=(totalDays?Math.round(s.total/totalDays*100):0)+'%';
+ $('details').innerHTML=`Challenge: <b>${escapeHtml(db.challenge.name)}</b><br>💪 Strong: <b>${s.strong}</b> · 🙂 Weak: <b>${s.weak}</b> · ⬜ Not marked: <b>${s.missed}</b><br>Started: ${new Date(db.challenge.start).toLocaleDateString()}<br>Members: ${db.members.length}<br>Invite code: <b>${db.challenge.code}</b>`;
+ renderCal();renderGraph();
+}
+function renderCal(){
+ let d=new Date(today().getFullYear(),today().getMonth(),1),last=new Date(d.getFullYear(),d.getMonth()+1,0),m=me(),set=new Set(normalizeMarks(m).map(x=>x.date));
+ $('calMonth').textContent=d.toLocaleDateString(undefined,{month:'long',year:'numeric'});
+ let out=['Mon','Tue','Wed','Thu','Fri','Sat','Sun'].map(x=>`<div class="calhead">${x}</div>`).join('');
+ let offset=(d.getDay()+6)%7;for(let i=0;i<offset;i++)out+='<div></div>';
+ for(let n=1;n<=last.getDate();n++){let x=new Date(d.getFullYear(),d.getMonth(),n),k=key(x),cls='day';if(set.has(k))cls+=' done';if(k===isoToday())cls+=' today';if(x>today())cls+=' future';out+=`<div class="${cls}">${n}</div>`}
+ $('cal').innerHTML=out;
+}
+function renderGraph(){
+ let start=new Date(db.challenge.start), end=today();
+ let totalDays=Math.max(1,Math.floor((end-start)/86400000)+1);
+ let rows=db.members.map(x=>({name:x.name,...stats(x)}));
+ let max=Math.max(1,...rows.map(r=>Math.max(r.strong,r.weak,r.missed)));
+ $('graph').innerHTML=`
+ <div style="display:grid;gap:12px">
+ ${rows.map((r,i)=>{
+   let marked=r.strong+r.weak, completion=Math.round(marked/totalDays*100);
+   let strongPct=marked?Math.round(r.strong/marked*100):0;
+   let weakPct=marked?100-strongPct:0;
+   return `<div style="border:1px solid #e5e7eb;border-radius:18px;padding:14px;background:linear-gradient(145deg,#ffffff,#f8fafc)">
+     <div class="row" style="margin-bottom:11px">
+       <div class="memberinfo">
+         <div class="avatar" style="background:#111827;color:white">${escapeHtml(r.name[0].toUpperCase())}</div>
+         <div><b style="font-size:15px">${escapeHtml(r.name)}${r.id===db.me?' (You)':''}</b>
+         <div class="small">🔥 ${r.cur} day streak</div></div>
+       </div>
+       <div style="text-align:right"><b style="font-size:20px">${completion}%</b><div class="small">completion</div></div>
+     </div>
+
+     <div style="height:16px;border-radius:99px;overflow:hidden;background:#e5e7eb;display:flex;margin-bottom:11px">
+       <div style="width:${r.strong/totalDays*100}%;background:#16a34a;min-width:${r.strong?'3px':'0'}"></div>
+       <div style="width:${r.weak/totalDays*100}%;background:#6366f1;min-width:${r.weak?'3px':'0'}"></div>
+     </div>
+
+     <div style="display:grid;grid-template-columns:repeat(3,1fr);gap:7px">
+       <div style="background:#f0fdf4;border-radius:12px;padding:9px;text-align:center">
+         <div style="font-size:20px">💪</div><b>${r.strong}</b><div class="small">Strong</div>
+       </div>
+       <div style="background:#eef2ff;border-radius:12px;padding:9px;text-align:center">
+         <div style="font-size:20px">🙂</div><b>${r.weak}</b><div class="small">Weak</div>
+       </div>
+       <div style="background:#f1f5f9;border-radius:12px;padding:9px;text-align:center">
+         <div style="font-size:20px">⬜</div><b>${r.missed}</b><div class="small">Not marked</div>
+       </div>
+     </div>
+
+     <div style="display:flex;justify-content:space-between;margin-top:10px;font-size:11px;color:#6b7280">
+       <span>Strong ${strongPct}% of marked</span><span>Marked ${marked}/${totalDays} days</span>
+     </div>
+   </div>`;
+ }).join('')}
+ </div>
+ <div style="margin-top:12px;padding:11px 13px;border-radius:13px;background:#f8fafc;font-size:12px;color:#64748b">
+   🟩 Strong &nbsp; • &nbsp; 🟪 Weak &nbsp; • &nbsp; ⬜ Not marked
+ </div>`;
+}
+function shareInvite(){
+ if(!db)return;let text=`🔥 Join my Daily Challenge!\\n\\nChallenge: ${db.challenge.name}\\nInvite Code: ${db.challenge.code}\\n\\nOpen the tracker and join with this code.`;
+ location.href='https://wa.me/?text='+encodeURIComponent(text);
+}
+async function copyInvite(){let t=`Join my Daily Challenge: ${db.challenge.name}\\nCode: ${db.challenge.code}`;try{await navigator.clipboard.writeText(t);alert('Invite text copied!')}catch(e){alert(t)}}
+function saveReminder(){
+ let t=$('reminderTime').value;
+ if(!t)return alert('Please choose a reminder time.');
+ db.reminderTime=t;save();
+ updateNotificationStatus();
+ if('Notification' in window && Notification.permission!=='granted'){
+   enableNotifications();
+ }else{
+   alert('Daily reminder time saved: '+t);
+ }
+}
+async function enableNotifications(){
+ if(!('Notification' in window)){
+   alert('This browser does not support notifications.');
+   return;
+ }
+ let p=await Notification.requestPermission();
+ if(p==='granted'){
+   db.notifications=true;save();updateNotificationStatus();
+   alert('Notifications enabled. Reminder time: '+(db.reminderTime||'not set'));
+ }else{
+   alert('Notification permission was not allowed.');
+ }
+}
+function updateNotificationStatus(){
+ if(!$('reminderTime'))return;
+ $('reminderTime').value=db.reminderTime||'21:00';
+ if(!('Notification' in window)){
+   $('notifStatus').textContent='Notifications are not supported by this browser.';
+ }else if(Notification.permission==='granted'){
+   $('notifStatus').textContent='✅ Notifications allowed. Keep this website installed/open for the reminder.';
+ }else{
+   $('notifStatus').textContent='Tap “Allow Notifications” to enable reminders.';
+ }
+}
+function checkReminder(){
+ if(!db || !db.reminderTime || !db.notifications)return;
+ let now=new Date(), todayKey=isoToday(), hhmm=now.toTimeString().slice(0,5);
+ let sentKey='reminderSent_'+todayKey;
+ if(hhmm===db.reminderTime && localStorage.getItem(sentKey)!=='1'){
+   if('Notification' in window && Notification.permission==='granted'){
+     new Notification('🔥 Daily Challenge', {body:"What's the day? Mark your status: Strong or Weak."});
+     localStorage.setItem(sentKey,'1');
+   }
+ }
+}
+function changeName(){let n=prompt('New name',me().name);if(n&&n.trim()){me().name=n.trim();save();render()}}
+function resetAll(){if(confirm('सारा demo data हटाना है?')){localStorage.removeItem(KEY);db=null;location.reload()}}
+function escapeHtml(s){return s.replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#039;'}[c]))}
+if(db){db.members.forEach(m=>{m.marks=m.marks.map(x=>typeof x==='string'?{date:x,status:'Strong'}:x)});save();goHome();setTimeout(updateNotificationStatus,100);setInterval(checkReminder,30000);}
+</script>
+<!-- Firebase CDN Scripts -->
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-database-compat.js"></script>
+
+<!-- Firebase Config -->
+<script>
+  const firebaseConfig = {
+    apiKey: "AIzaSyDTKkN0EMaltmjPRPjyGIVqdJBcfLUfpEU",
+    authDomain: "no-masturbation-challenge.firebaseapp.com",
+    databaseURL: "https://no-masturbation-challenge-default-rtdb.firebaseio.com",
+    projectId: "no-masturbation-challenge",
+    storageBucket: "no-masturbation-challenge.firebasestorage.app",
+    messagingSenderId: "335977074422",
+    appId: "1:335977074422:web:1e4ac260f1f6c6a97f26d7"
+  };
+
+  // Firebase Initialize
+  firebase.initializeApp(firebaseConfig);
+  const database = firebase.database();
+</script>
+
+</body>
+</html>
